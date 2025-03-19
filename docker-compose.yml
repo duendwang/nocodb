@@ -13,10 +13,11 @@ services:
       - NC_DISABLE_TELE=true
     image: "nocodb/nocodb:latest"
     labels: 
-      - traefik.enable=true
-      - traefik.http.services.nocodb.loadbalancer.server.port=8080
+      - "traefik.enable=true"
+      - "traefik.http.services.nocodb.loadbalancer.server.port=8080"
       - "traefik.http.routers.nocodb.rule=Host(`$DOMAIN`)"
-      - traefik.http.routers.nocodb.entrypoints=https
+      - "traefik.http.routers.nocodb.entrypoints=websecure"
+      - "traefik.http.routers.nocodb.tls.certresolver=http-challenge"
       #- com.centurylinklabs.watchtower.enable=true
     networks: 
       - traefik-proxy
