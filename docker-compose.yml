@@ -1,4 +1,5 @@
 networks:
+  default:
   traefik-proxy:
     name: traefik-proxy
     external: true
@@ -7,6 +8,8 @@ services:
 #    container_name: nocodb
     depends_on:
       - nocodb-db
+      - redis
+#      - minio
     environment:
       - "NC_DB=pg://nocodb-db:5432?u=${DATABASE_USER}&p=${DATABASE_PW}&d=${DATABASE_NAME}"
       - "NC_PUBLIC_URL=https://${DOMAIN}"
@@ -44,6 +47,31 @@ services:
     restart: always
     volumes:
       - "nocodb-db:/var/lib/postgresql/data"
+  redis:
+    image: redis:latest
+    restart: unless-stopped
+    command:
+      - /bin/sh
+      - -c
+#      - redis-server --requirepass "\$\${REDIS_PASSWORD}"
+      - redis-server
+    healthcheck:
+#      test: [ "CMD", "redis-cli", "-a", "\$\${REDIS_PASSWORD}", "--raw", "incr", "ping" ]
+      test: [ "CMD", "redis-cli", "-a", "--raw", "incr", "ping" ]
+    volumes:
+      - "nocodb-redis:/data"
+#  minio:
+#    image: minio/minio:latest
+#    restart: unless-stopped
+#    entrypoint: /bin/sh
+#    volumes:
+#      - "nocodb-minio:/export"
+#    command: -c 'mkdir -p /export/nocodb && /usr/bin/minio server /export'
+#    labels:
+#      - "traefik.enable=true"
+#      - "traefik.http.services.minio.loadbalancer.server.port=9000"
+#      - "traefik.http.routers.minio.rule=Host(`$MINIO_DOMAIN`)"
+#      - "traefik.http.routers.minio.entrypoints=websecure"
 #  traefik:
 #    command:
 #      - "--providers.docker=true"
@@ -102,3 +130,7 @@ volumes:
     name: nocodb-data
   nocodb-db:
     name: nocodb-db
+  nocodb-redis:
+    name: nocodb-redis
+#  nocodb-minio:
+#    name: nocodb-minio
